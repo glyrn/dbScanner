@@ -5,32 +5,21 @@
  */
 public enum FieldType {
 
-    BYTE(new Class[]{Byte.class}, "byte", 0, "defaultCharset"),
-    SHORT(new Class[]{Short.class}, "short", 0, "defaultCharset"),
-    INT(new Class[]{Integer.class}, "int", 0, "defaultCharset"),
-    LONG(new Class[]{Long.class}, "long", 0, "defaultCharset"),
-    FLOAT(new Class[]{Float.class}, "float", 0, "defaultCharset"),
-    DOUBLE(new Class[]{Double.class}, "double", 0, "defaultCharset"),
-
-    BLOB(new Class[]{Byte[].class}, "blob", 0, "defaultCharset"),
-    MEDIUM_BLOB(new Class[]{Byte[].class}, "medium blob", 0, "defaultCharset"),
-
-    VARCHAR(new Class[]{String.class}, "varchar", 255, "defaultCharset"),
-    TEXT(new Class[]{String.class}, "text", 0, "defaultCharset"),
-    MEDIUM_TEXT(new Class[]{String.class}, "mediumtext", 0, "defaultCharset"),
-    LONG_TEXT(new Class[]{String.class}, "longtext", 0, "defaultCharset"),
-
-    NULL(null, "null", 0, "defaultCharset");
+    /**
+     * 数字类型
+     */
+    BYTE (new Class[]{byte.class, Byte.class}, "TINYINT", 4),
+    SHORT(new Class[]{short.class, Short.class}, "SMALLINT", 6);
 
 
     /**
      * 变量类型
      */
-    private Class<?>[] fieldTypeClass;
+    private Class<?>[] fieldTypes;
     /**
      * 字段类型
      */
-    private String fieldType;
+    private String dbType;
     /**
      * 字段长度
      */
@@ -40,11 +29,33 @@ public enum FieldType {
      */
     private String charSet;
 
-    FieldType(Class<?>[] fieldTypeClass, String fieldType, int length, String charSet) {
-        this.fieldTypeClass = fieldTypeClass;
-        this.fieldType = fieldType;
+    /**
+     * 默认字符集
+     */
+    public static final String DEFAULT_CHARSET_COLLATE = "utf8mb4_general_ci";
+
+    FieldType(Class<?>[] fieldTypes, String dbType, int length) {
+        this.fieldTypes = fieldTypes;
+        this.dbType = dbType;
         this.length = length;
-        this.charSet = charSet;
+        this.charSet = DEFAULT_CHARSET_COLLATE;
+    }
+
+    /**
+     * 按照class类型查找type
+     * @param clz
+     * @return
+     */
+    public static FieldType valueOfType(Class<?> clz) {
+        for (FieldType value : FieldType.values()) {
+            for (Class<?> fieldType : value.fieldTypes) {
+                if (fieldType == clz) {
+                    return value;
+                }
+            }
+
+        }
+        return null;
     }
 
 }
