@@ -1,8 +1,11 @@
 import lombok.Getter;
+import org.yaml.snakeyaml.Yaml;
+import util.YamlUtils;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 与数据库建立连接对象
@@ -41,20 +44,17 @@ public class dbExcutor {
     public boolean init() {
         String driverClass = "com.mysql.jdbc.Driver";
         try {
-            // 注册驱动
-//            Class.forName(driverClass);
-
             Class.forName("com.mysql.cj.jdbc.Driver");
-//            String url = "jdbc:mysql://localhost:3306/";
-            String url = "jdbc:mysql://localhost:3306/";
-            //TODO 这里后续需要处理参数问题 把？后面字符去掉
-            String usr = "root";
-            String pwd = "123456";
 
             String qry = "show databases like 'sanguo'";
 
+            Map<String, Object> cfg = YamlUtils.getMap();
+            String url = (String) cfg.get("url");
+            String password = (String) cfg.get("password");
+            String username = (String) cfg.get("username");
+
             // 建立连接
-            Connection connection = DriverManager.getConnection(url, usr, pwd);
+            Connection connection = DriverManager.getConnection(url, username, password);
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(qry);
             conn.connection = connection;
