@@ -88,4 +88,38 @@ public class dbExcutor {
             }
         }
     }
+
+    /**
+     * 查询sql封装
+     */
+    public ResultSet query(String sql) {
+        try {
+            Connection connection = conn.connection;
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(sql);
+            // 存查询记录sql
+            conn.excuteSqlRecords.add(sql);
+            return resultSet;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 创建sql封装
+     */
+    public boolean create(String sql) {
+        try {
+            Connection connection = conn.connection;
+            Statement statement = connection.createStatement();
+            int lows = 1;
+            lows = statement.executeUpdate(sql);
+            // 存查询记录sql
+            conn.excuteSqlRecords.add(sql);
+            // 创建成功则影响行数为0
+            return lows == 0;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
