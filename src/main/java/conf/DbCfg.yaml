@@ -1,0 +1,7 @@
+dbUrl: "jdbc:mysql://127.0.0.1:3306/hello"
+usr: "root"
+pwd: "123456"
+
+
+
+

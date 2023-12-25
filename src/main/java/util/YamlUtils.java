@@ -1,7 +1,9 @@
 package util;
 
+import conf.DbCfg;
 import org.yaml.snakeyaml.Yaml;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.Map;
@@ -73,4 +75,24 @@ public class YamlUtils {
         return yaml;
     }
 
+    /**
+     * 将yaml配置加载进内存
+     * @param yamlFilePath
+     * @param clazz
+     * @return
+     */
+    public static DbCfg loadYaml(String yamlFilePath, Class<?> clazz) {
+
+        Yaml yaml = null;
+        FileInputStream inputStream = null;
+        try {
+            yaml = new Yaml();
+            inputStream = new FileInputStream(yamlFilePath);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        DbCfg dbCfg = (DbCfg) yaml.loadAs(inputStream, clazz);
+        return dbCfg;
+    }
 }
