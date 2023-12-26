@@ -1,30 +1,19 @@
 import conf.DbCfg;
 import lombok.Getter;
-import util.YamlUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 与数据库建立连接对象
- * <p>
- * 初始化连接 init 创建连接对象 索引 连接对象 执行过的sql 构造方法 创建数据库专用连接 如果存在不管 不存在就创建sql库
- * <p>
- * 关闭连接
- * <p>
- * get执行过的sql
- * <p>
- * 库中全部的表名字
- * <p>
- * 更新sql
- * <p>
- * 查询sql
+
  */
-public class DbExcutor implements Closeable {
+@Slf4j
+public class DBExcutor implements Closeable {
 
     static class Conn {
         @Getter
@@ -46,6 +35,7 @@ public class DbExcutor implements Closeable {
      * @return
      */
     public boolean init(DbCfg dbCfg) {
+        log.info("init is called");
         String driverClass = "com.mysql.jdbc.Driver";
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -96,11 +86,11 @@ public class DbExcutor implements Closeable {
 
             conn.connection = DriverManager.getConnection(dbUrl, usr, pwd);
 
+            return true;
 
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-        return true;
     }
 
     /**
@@ -145,7 +135,6 @@ public class DbExcutor implements Closeable {
             statement.executeUpdate(sql);
             // 存查询记录sql
             if (record) {
-
                 conn.excuteSqlRecords.add(sql);
             }
         } catch (SQLException e) {
@@ -153,9 +142,33 @@ public class DbExcutor implements Closeable {
         }
     }
 
+    /**
+     * 获取执行的sql记录
+     * @return
+     */
     public List<String> getUpdateSqlRecords() {
         List<String> list = new ArrayList<>();
         list.addAll(conn.excuteSqlRecords);
         return list;
+    }
+
+    /**
+     * 获取数据库所有的表名
+     */
+    public List<String> getAllTablesName() {
+        try {
+            DatabaseMetaData metaData = conn.connection.getMetaData();
+            ResultSet resultSet = metaData.getTables(null, null, "%", null);
+
+            while (resultSet.next()) {
+                System.out.println(resultSet.getString("TABLE_NAME"));
+            }
+            resultSet.close();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return null;
     }
 }
