@@ -6,7 +6,9 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 与数据库建立连接对象
@@ -140,6 +142,43 @@ public class DBExcutor implements Closeable {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * 查询sql封装
+     */
+    public List<Map<String, Object>> qurey(String sql) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+
+        try (
+                Statement statement = conn.connection.createStatement();
+                ResultSet rs = statement.executeQuery(sql);
+        ){
+            // 收集元数据
+            ResultSetMetaData meta = rs.getMetaData();
+            List<String> colList = new ArrayList<>();
+            // 记录列的名字
+            for (int i = 1; i < meta.getColumnCount(); i ++) {
+                String columnName = meta.getColumnName(i);
+                colList.add(columnName);
+            }
+
+            while (rs.next()) {
+                Map<String, Object> columeMap = new LinkedHashMap<>();
+
+                for (String colName : colList) {
+                    Object object = rs.getObject(colName);
+                    columeMap.put(colName, object);
+                }
+                rows.add(columeMap);
+            }
+
+
+        }catch (Exception ex) {
+            // TODO 记录日志
+            return null;
+        }
+        return rows;
     }
 
     /**
