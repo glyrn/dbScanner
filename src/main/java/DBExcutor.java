@@ -110,20 +110,61 @@ public class DBExcutor implements Closeable {
         }
     }
 
+//    /**
+//     * 查询sql封装 - 废弃
+//     */
+//    public ResultSet queryBrk(String sql) {
+//        try {
+//            Connection connection = conn.connection;
+//            Statement statement = connection.createStatement();
+//            ResultSet resultSet = statement.executeQuery(sql);
+//            // 存查询记录sql
+//            conn.excuteSqlRecords.add(sql);
+//            return resultSet;
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
     /**
-     * 查询sql封装
+     * 查询sql
+     * @param sql
+     * @return
      */
-    public ResultSet query(String sql) {
-        try {
-            Connection connection = conn.connection;
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
-            // 存查询记录sql
-            conn.excuteSqlRecords.add(sql);
-            return resultSet;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+    public List<Map<String, Object>> query(String sql){
+        List<Map<String, Object>> rows = new ArrayList<>();
+
+        try (
+                Statement stat = conn.connection.createStatement();
+                ResultSet rs = stat.executeQuery(sql);
+        ) {
+            //数据集信息
+            ResultSetMetaData meta = rs.getMetaData();
+
+            List<String> colList = new ArrayList<>();
+
+            for (int i = 1; i <= meta.getColumnCount(); i++) {
+                String name = meta.getColumnName(i);
+                colList.add(name);
+            }
+
+            while (rs.next()){
+                Map<String, Object> columnMap = new LinkedHashMap<>();
+
+                for (String colName : colList) {
+                    Object object = rs.getObject(colName);
+                    columnMap.put(colName,object);
+                }
+
+                rows.add(columnMap);
+            }
+
+
+        } catch (Exception ex) {
+            // TODO: log ex = sql
+            return null;
         }
+        return rows;
     }
 
     /**
