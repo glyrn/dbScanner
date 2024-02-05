@@ -457,7 +457,9 @@ public class DBScanner {
                         String collationNew = tableFromEntity.getCollation();
                         String collationOld = key2CreateStrMap.get("COLLATION");
 
-                        if(collationOld.isEmpty()){
+
+
+                        if(StringUtil.isEmptyString(collationOld)){
                             collationOld = FieldType.DEFAULT_CHARSET_COLLATE;
                         }
                         if(!collationNew.equals(collationOld)){
@@ -686,7 +688,7 @@ public class DBScanner {
             for (DBTableAndFields tableAndFields : dbTableAndFieldsArray) {
                 if(tableAndFields != null && tableAndFields.columns()!=null){
                     for (ColumnExt column : tableAndFields.columns()) {
-                        if(column.name().isEmpty()){
+                        if(StringUtil.isEmptyString(column.name())){
                             continue;
                         }
                         if(getInstance().flagModifyStrict && column.modifyMode() != STRICT){

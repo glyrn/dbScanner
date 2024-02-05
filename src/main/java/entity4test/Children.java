@@ -23,5 +23,8 @@ public class Children {
     @Column(name = "pigs")
     private int pigs;
 
+    @Column(name = "oaa")
+    private int oaa;
+
 
 }

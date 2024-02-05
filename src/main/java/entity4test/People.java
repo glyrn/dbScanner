@@ -21,4 +21,10 @@ public class People {
 
     @Column(name = "age")
     private int age;
+
+    @Column(name = "ali")
+    private int ali;
+
+    @Column(name = "tx")
+    private int tx;
 }

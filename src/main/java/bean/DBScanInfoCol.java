@@ -196,7 +196,7 @@ public class DBScanInfoCol {
             return true;
         }
 
-        String oldCollation = oldTableCollation.isEmpty() ? FieldType.DEFAULT_CHARSET_COLLATE : oldTableCollation;
+        String oldCollation = StringUtil.isEmptyString(oldTableCollation) ? FieldType.DEFAULT_CHARSET_COLLATE : oldTableCollation;
         StringBuilder oldSB = new StringBuilder();
         if (oldCollation.trim().endsWith(",")){
             oldColumnStr = oldColumnStr.trim().substring(0, oldColumnStr.trim().length()-1);
@@ -279,7 +279,7 @@ public class DBScanInfoCol {
         }
 
         // 判断字符集
-        String collation = ((String) get(COLLATION)).isEmpty() ? tableCollation : get(COLLATION);
+        String collation = StringUtil.isEmptyString(get(COLLATION)) ? tableCollation : get(COLLATION);
         if (!collation.equalsIgnoreCase(oldCollation)) {
             return false; // 不一致
         }
