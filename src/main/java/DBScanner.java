@@ -6,6 +6,7 @@ import bean.DBScannerEntityMD5;
 import bean.DBScannerInfoIndex;
 import bean.DBScannerInfoTable;
 import bean.DBTableAndFields;
+import bean.Entity;
 import bean.FieldModifyMode;
 import bean.FieldType;
 import bean.GeneratedValue;
@@ -17,7 +18,10 @@ import bean.TableExt;
 import bean.UniqueConstraint;
 import conf.DbCfg;
 import lombok.extern.slf4j.Slf4j;
+import util.ClassUtil;
+import util.FileUtil;
 import util.Md5Util;
+import util.StringUtil;
 
 import java.beans.Transient;
 import java.io.BufferedReader;
@@ -28,9 +32,11 @@ import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -149,11 +155,25 @@ public class DBScanner {
              */
 //            List<String> tableNames = dbExcutor.getTables();
 
+            //设置开关 默认开
+            flagAlterIndex = Boolean.parseBoolean(System.getProperty("dbScannerAlterIndex",String.valueOf(flagAlterIndex)));
+            flagModifyStrict = Boolean.parseBoolean(System.getProperty("dbScannerModifyStrict",String.valueOf(flagModifyStrict)));
+
+
+            long startTime = System.currentTimeMillis();
+
+            boolean result = scanningDatabase(dbExcutor, "entity4test");
+
+            //记录sql文件
+            recordUpdateSql(startTime,dbExcutor.getUpdateSqRecords());
+
+
+            return result;
 
         }catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-        return true;
+
     }
 
     /**
@@ -182,7 +202,8 @@ public class DBScanner {
                     entityPackage = entityPackage.trim();
                     {// entity
                         // TODO 扫描所有带 @Entity 注解的class [静态] [classSet]
-                        List<Class<?>> classSet = new ArrayList<>();
+
+                        List<Class<?>> classSet = ClassUtil.scanClassesFilter(entityPackage, Entity.class);
                         Iterator<Class<?>> ite = classSet.iterator();
 
                         while (ite.hasNext()) {
@@ -251,6 +272,8 @@ public class DBScanner {
     private boolean doScanningDatabase(DBExcutor dbExcutor, Map<String, List<Class<?>>> entities, Map<String, List<Class<?>>> batchConstraints, List<String> existTableNames) {
         //TODO: 记录 entities exitsTableNames
 
+        log.debug("doScanningDatabase entities = {},existTableNames={}", entities, existTableNames);
+
         Map<String, List<DBTableAndFields>> tableBatchMap = new HashMap<>();
 
         // 处理批量约束
@@ -314,11 +337,16 @@ public class DBScanner {
                             continue;
                         }
                         DBScanInfoCol column = new DBScanInfoCol();
+
+
+
                         // column annotation
                         column.putMap(fieldMap);
                         column.setTableCollation(tableCollation); // 记录table的默认字符排序
 
                         String columnName = column.get(COLUMN_NAME);
+
+                        String test = column.toString();
 
                         // 记录这个列
                         tableFromEntity.getColumns().add(column);
@@ -380,7 +408,10 @@ public class DBScanner {
                     // 这个表还在使用
                     noUseTableMap.remove(tableName);
 
-                    if (!oldMd5.isEmpty() && newMd5.equals(oldMd5) && existTableNames.contains(tableFromEntity.getTableName())) {
+
+
+
+                    if (!StringUtil.isEmptyString(oldMd5) && newMd5.equals(oldMd5) && existTableNames.contains(tableFromEntity.getTableName())) {
                         // md5 未变化 不需要修改
                         continue;
                     }
@@ -626,7 +657,10 @@ public class DBScanner {
             // 如果是第一次使用 创建md5专用表 用于记录各表class的md5值
 
             if (!tableNameSet.contains(TABLE_MD5)) {
-                dbExcutor.update("CREATE TABLE IF NOT EXISTS" + TABLE_MD5 + "(className varchar(120) not null primary key,packageName varchar(512),md5 varchar(100),tableName varchar(100) not null);" , false);
+
+                String sql = "CREATE TABLE IF NOT EXISTS " + TABLE_MD5 + "(className varchar(120) not null primary key,packageName varchar(512),md5 varchar(100),tableName varchar(100) not null);";
+                log.debug(sql);
+                dbExcutor.update(sql , false);
             }
 
         }catch (Exception ex) {
@@ -899,5 +933,85 @@ public class DBScanner {
             }
         }
         return null;
+    }
+
+    /**
+     * 记录修改语句
+     * @param sqlList
+     */
+    private void recordUpdateSql(long startTime,List<String> sqlList){
+        if (sqlList == null || sqlList.size() == 0) {
+            return;
+        }
+        try {
+
+            String sqlFilePath = System.getProperty("user.dir") + "/sql/auto-gen-local.sql";
+            String textFile = "";
+
+            StringBuilder sb = new StringBuilder();
+            //新的在上面
+            sb.append("---------------------------------- ")
+                    .append("AUTO GENERATION @ ")
+                    .append(new Date().toString())
+                    .append(" Cost:")
+                    .append(String.valueOf(System.currentTimeMillis()-startTime))
+                    .append("ms ----------------------------------\n");
+
+            Map<String,List<String>> tableMap = new LinkedHashMap<>();
+            L1:
+            for (String sql : sqlList) {
+                if(sql.startsWith("CREATE DATABASE")){
+                    //重新创建库
+                    textFile = "";//旧的不要了
+
+                    sb.append("--\n");
+                    sb.append("-- ").append("INIT DATABASE\n");
+                    sb.append("--\n");
+                    sb.append(sql).append("\n");
+                    continue ;
+                }
+
+
+
+                String[] strings = sql.split(" ");
+                for (int i = 0; i < strings.length; i++) {
+                    if(strings[i].trim().equals("")){
+                        continue;
+                    }
+
+                    if(strings[i].equalsIgnoreCase("table")){
+                        for (int j = i+1; j < strings.length; j++) {
+                            if(strings[j].startsWith("`")){
+                                String tableName = strings[j].substring(1,strings[j].indexOf("`",1));
+                                tableMap.computeIfAbsent(tableName, k -> new ArrayList<>()).add(sql);
+                                continue L1;
+                            }
+                        }
+                        tableMap.computeIfAbsent("unknown", k -> new ArrayList<>()).add(sql);
+                        continue L1;
+                    }
+
+                }
+            }
+
+            for (Map.Entry<String, List<String>> entry : tableMap.entrySet()) {
+                sb.append("--\n");
+                sb.append("-- ").append("CHANGES FOR TABLE `").append(entry.getKey()).append("`\n");
+                sb.append("--\n");
+                for (String sql : entry.getValue()) {
+                    sb.append(sql).append("\n");
+                }
+            }
+
+
+
+            //旧的
+            sb.append(textFile);
+
+            FileUtil.saveAsFile(sb.toString(),sqlFilePath,"utf8");
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

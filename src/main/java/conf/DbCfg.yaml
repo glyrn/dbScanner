@@ -1,4 +1,4 @@
-dbUrl: "jdbc:mysql://127.0.0.1:3306/hello"
+dbUrl: "jdbc:mysql://127.0.0.1:3306/hello_3"
 usr: "root"
 pwd: "123456"
 

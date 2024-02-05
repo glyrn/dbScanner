@@ -23,4 +23,8 @@ public class StringUtil {
         }
         return sb.toString();
     }
+
+    public static boolean isEmptyString(String value) {
+        return value == null || value.length() <= 0;
+    }
 }

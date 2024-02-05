@@ -13,9 +13,8 @@ public class app {
         // 加载配置
         DbCfg dbCfg = YamlUtils.loadYaml("src/main/java/conf/DbCfg.yaml", DbCfg.class);
         // 装载
-        dbExcutor.init(dbCfg);
 
-        dbExcutor.getAllTablesName();
+        DBScanner.getInstance().startWork(dbCfg);
 
     }
 

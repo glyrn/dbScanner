@@ -10,15 +10,18 @@ import bean.Table;
  * 测试用 后续这个文件夹需要删除
  */
 @Entity
-@Table(name = "people")
-public class People {
-//    @Column(name = "age", type = FieldType.INT, size = 2, defaultValue = "1")
-
+@Table(name = "children")
+public class Children {
     @Id
     @GeneratedValue(generator = "AUTO_INCREMENT")
     @Column(name = "id", unique = true)
-    private int id = 0;
+    private int id;
 
-    @Column(name = "age")
-    private int age;
+    @Column(name = "egg")
+    private int egg;
+
+    @Column(name = "pigs")
+    private int pigs;
+
+
 }

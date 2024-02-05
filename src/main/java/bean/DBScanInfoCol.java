@@ -79,14 +79,15 @@ public class DBScanInfoCol {
 
         String columnName = get(COLUMN_NAME);
         String specialColumn = getSpecialColumn(columnName);
-        if (!specialColumn.isEmpty()) {
+        if (!StringUtil.isEmptyString(specialColumn)) {
             // 特殊固定列
             return specialColumn;
         }
 
         String typeName = get(TYPE_NAME);
         int columnSize = get(COLUMN_SIZE);
-        String collation = ((String) get(COLLATION)).isEmpty() ? tableCollation : get(COLLATION);
+
+        String collation = StringUtil.isEmptyString(get(COLLATION)) ? tableCollation : get(COLLATION);
         String columnDef = get(COLUMN_DEF) == null ? "NULL" : get(COLUMN_DEF);
         boolean hasDefValue = get(HAS_DEF_VAL);
         String extra = get(EXTRA) == null ? "" : get(EXTRA);

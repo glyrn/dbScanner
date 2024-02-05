@@ -236,12 +236,13 @@ public class DBExcutor implements Closeable {
      * 获取数据库所有的表名
      */
     public List<String> getAllTablesName() {
+        List<String> tableNames = new ArrayList<>();
         try {
             DatabaseMetaData metaData = conn.connection.getMetaData();
-            ResultSet resultSet = metaData.getTables(null, null, "%", null);
+            ResultSet resultSet = metaData.getTables(conn.connection.getCatalog(), "%", "%", new String[]{"TABLE"});
 
             while (resultSet.next()) {
-                System.out.println(resultSet.getString("TABLE_NAME"));
+                tableNames.add(resultSet.getString("TABLE_NAME"));
             }
             resultSet.close();
 
@@ -249,6 +250,16 @@ public class DBExcutor implements Closeable {
             throw new RuntimeException(e);
         }
 
-        return null;
+        return tableNames;
+    }
+
+    /**
+     * 执行过的sql
+     * @return
+     */
+    public List<String> getUpdateSqRecords() {
+        List<String> list = new ArrayList<>();
+        list.addAll(conn.excuteSqlRecords);
+        return list;
     }
 }

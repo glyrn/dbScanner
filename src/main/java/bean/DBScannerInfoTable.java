@@ -1,5 +1,7 @@
 package bean;
 
+import util.StringUtil;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -69,7 +71,7 @@ public class DBScannerInfoTable {
     }
 
     public String getCollation() {
-        if(collation.isEmpty()){
+        if(StringUtil.isEmptyString(collation)){
             return FieldType.DEFAULT_CHARSET_COLLATE;
         }
         return collation;
