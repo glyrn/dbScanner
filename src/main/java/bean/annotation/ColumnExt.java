@@ -1,4 +1,7 @@
-package bean;
+package bean.annotation;
+
+import bean.FieldModifyMode;
+import bean.FieldType;
 
 import static bean.FieldModifyMode.STRICT;
 

@@ -1,10 +1,10 @@
 package entity4test;
 
-import bean.Column;
-import bean.Entity;
-import bean.GeneratedValue;
-import bean.Id;
-import bean.Table;
+import bean.annotation.Column;
+import bean.annotation.Entity;
+import bean.annotation.GeneratedValue;
+import bean.annotation.Id;
+import bean.annotation.Table;
 
 /**
  * 测试用 后续这个文件夹需要删除
