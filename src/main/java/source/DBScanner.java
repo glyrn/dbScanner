@@ -1,3 +1,5 @@
+package source;
+
 import bean.annotation.Column;
 import bean.annotation.ColumnExt;
 import bean.DBColFieldKey;
@@ -17,11 +19,13 @@ import bean.annotation.Table;
 import bean.annotation.TableExt;
 import bean.annotation.UniqueConstraint;
 import conf.DbCfg;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import util.ClassUtil;
 import util.FileUtil;
 import util.Md5Util;
 import util.StringUtil;
+import util.YamlUtil;
 
 import java.beans.Transient;
 import java.io.BufferedReader;
@@ -64,7 +68,7 @@ import static bean.FieldModifyMode.STRICT;
 /**
  * 使用mybatis框架的时候不会自动创建表 如果数据库中没有表 应该先自动创建表并存储md5 如果已经有表了 就修改表
  */
-@Slf4j
+
 public class DBScanner {
 
     /**
@@ -118,6 +122,8 @@ public class DBScanner {
      */
     private Set<String> skipTables = new HashSet<>();
 
+    Logger log = LoggerFactory.getLogger(DBScanner.class);
+
     /**
      * 获取实例对象
      */
@@ -136,10 +142,24 @@ public class DBScanner {
     }
 
     /**
+     * 对外接口 [ jar包依赖 ]
+     *
+     * 使用次接口默认从工作路径下的 src/main/resource下读取配置 (DbCfg.yaml)
+     * @return
+     */
+    public boolean startWork(){
+        DbCfg dbCfg = YamlUtil.loadYaml();
+        return startWork(dbCfg);
+    }
+
+    /**
      * 开始扫表
      * @return
      */
     public boolean startWork(DbCfg dbCfg) {
+
+
+
         try(DBExcutor dbExcutor = new DBExcutor()){
             // 建立数据库连接失败
             if (!dbExcutor.init(dbCfg)) {
@@ -161,7 +181,7 @@ public class DBScanner {
 
             long startTime = System.currentTimeMillis();
 
-            boolean result = scanningDatabase(dbExcutor, "entity4test");
+            boolean result = scanningDatabase(dbExcutor, dbCfg.getEntityPackage());
 
             //记录sql文件
             recordUpdateSql(startTime,dbExcutor.getUpdateSqRecords());
@@ -200,7 +220,6 @@ public class DBScanner {
                 for (String entityPackage : entityPackageArray) {
                     entityPackage = entityPackage.trim();
                     {// entity
-                        // TODO 扫描所有带 @Entity 注解的class [静态] [classSet]
 
                         List<Class<?>> classSet = ClassUtil.scanClassesFilter(entityPackage, Entity.class);
                         Iterator<Class<?>> ite = classSet.iterator();
@@ -269,7 +288,6 @@ public class DBScanner {
      * @return
      */
     private boolean doScanningDatabase(DBExcutor dbExcutor, Map<String, List<Class<?>>> entities, Map<String, List<Class<?>>> batchConstraints, List<String> existTableNames) {
-        //TODO: 记录 entities exitsTableNames
 
         log.debug("doScanningDatabase entities = {},existTableNames={}", entities, existTableNames);
 
@@ -420,7 +438,8 @@ public class DBScanner {
 
                     if (existTableNames.contains(tableName)) {
                         // 表存在 从db中获取
-                        // TODO log: scaning tableName: {tableName}
+
+                        log.debug("scanning table: {}", tableName);
                         // 基础信息
                         queryTableBaseInfo(dbExcutor, tableName, key2CreateStrMap);
 
@@ -545,6 +564,7 @@ public class DBScanner {
                                                 dbExcutor.update(tableFromEntity.dropIndex(indexName), true);
                                             } catch (Exception sqlException) {
                                                 // todo 这里是sql 异常 记录sql
+                                                log.error("err sql: {}", sqlException);
                                             }
                                         });
                                     }
@@ -961,6 +981,7 @@ public class DBScanner {
             Map<String,List<String>> tableMap = new LinkedHashMap<>();
             L1:
             for (String sql : sqlList) {
+                log.debug("excuting sql:{}", sql);
                 if(sql.startsWith("CREATE DATABASE")){
                     //重新创建库
                     textFile = "";//旧的不要了

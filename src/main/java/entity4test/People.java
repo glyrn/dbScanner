@@ -19,11 +19,10 @@ public class People {
     @Column(name = "id", unique = true)
     private int id = 0;
 
-    @Column(name = "age")
-    private int age;
+
 
     @Column(name = "ali")
-    private int ali;
+    private String ali;
 
     @Column(name = "tx")
     private int tx;

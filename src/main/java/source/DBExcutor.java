@@ -1,6 +1,10 @@
+package source;
+
 import conf.DbCfg;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -14,8 +18,10 @@ import java.util.Map;
  * 与数据库建立连接对象
 
  */
-@Slf4j
+
 public class DBExcutor implements Closeable {
+
+    Logger log = LoggerFactory.getLogger(DBExcutor.class);
 
     static class Conn {
         @Getter
@@ -63,13 +69,14 @@ public class DBExcutor implements Closeable {
 
                 if (resultSet.next()) {
                     // 数据库存在则不处理
-                    System.out.println("database is exist !");
+                    log.info("database: {} is exist", database);
                 } else {
-                    System.out.println(1);
+
                     // 数据库不存在 -->创建数据库
                     // 扫库
                     String excuteCreateDB = "CREATE DATABASE " + database + ";";
                     update(excuteCreateDB, true);
+                    log.info("create database: {} success", database);
                 }
 
             } catch (SQLException e) {
@@ -161,7 +168,7 @@ public class DBExcutor implements Closeable {
 
 
         } catch (Exception ex) {
-            // TODO: log ex = sql
+            log.error("DBexcutor err!, qurey sql: {}", sql);
             return null;
         }
         return rows;

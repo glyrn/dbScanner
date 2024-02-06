@@ -3,7 +3,6 @@ package util;
 import conf.DbCfg;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.Map;
@@ -13,7 +12,7 @@ import java.util.Map;
  *
  * @author Bruce Pan
  */
-public class YamlUtils {
+public class YamlUtil {
 
     /**
      * 根据传入的yml文件路径，读取文件内容并返回对应map
@@ -65,12 +64,12 @@ public class YamlUtils {
     }
 
     /**
-     * 不指定路径默认从resources目录下读取application.yml文件
+     * 不指定路径默认从resources目录下读取DbCfg.yml文件
      * @return
      */
     public static Yaml getYaml() {
         Yaml yaml = new Yaml();
-        yaml.load(System.getProperty("user.dir") + "/src/main/resources/application.yml");
+        yaml.load(System.getProperty("user.dir") + "/src/main/resources/DbCfg.yml");
 
         return yaml;
     }
@@ -94,5 +93,13 @@ public class YamlUtils {
 
         DbCfg dbCfg = (DbCfg) yaml.loadAs(inputStream, clazz);
         return dbCfg;
+    }
+
+    /**
+     * 默认读取 从resources目录下读取DbCfg.yml文件
+     * @return
+     */
+    public static DbCfg loadYaml() {
+        return loadYaml(System.getProperty("user.dir") + "/src/main/resources/DbCfg.yaml", DbCfg.class);
     }
 }

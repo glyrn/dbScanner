@@ -9,4 +9,5 @@ public class DbCfg {
     private String dbUrl;
     private String usr;
     private String pwd;
+    private String entityPackage;
 }

@@ -1,6 +1,7 @@
-dbUrl: "jdbc:mysql://127.0.0.1:3306/hello_3"
-usr: "root"
-pwd: "123456"
+dbUrl: jdbc:mysql://127.0.0.1:3306/hello_8
+usr: root
+pwd: 123456
+entityPackage: entity4test
 
 
 
