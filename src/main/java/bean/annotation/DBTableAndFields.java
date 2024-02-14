@@ -19,7 +19,7 @@ public @interface DBTableAndFields {
      *
      * @return
      */
-    TableExt table();
+    DBScanTableExt table();
 
     /**
      * 只有列生效
@@ -33,5 +33,5 @@ public @interface DBTableAndFields {
      *
      * @return
      */
-    ColumnExt[] columns();
+    DBScanColumnExt[] columns();
 }

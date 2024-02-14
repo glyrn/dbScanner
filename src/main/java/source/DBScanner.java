@@ -1,22 +1,22 @@
 package source;
 
-import bean.annotation.Column;
-import bean.annotation.ColumnExt;
+import bean.annotation.DBScanColumn;
+import bean.annotation.DBScanColumnExt;
 import bean.DBColFieldKey;
 import bean.DBScanInfoCol;
 import bean.DBScannerEntityMD5;
 import bean.DBScannerInfoIndex;
 import bean.DBScannerInfoTable;
 import bean.annotation.DBTableAndFields;
-import bean.annotation.Entity;
+import bean.annotation.DBScanEntity;
 import bean.FieldModifyMode;
 import bean.FieldType;
 import bean.annotation.GeneratedValue;
-import bean.annotation.Id;
+import bean.annotation.DBScanId;
 import bean.IndexType;
 import bean.annotation.KeyConstraint;
-import bean.annotation.Table;
-import bean.annotation.TableExt;
+import bean.annotation.DBScanTable;
+import bean.annotation.DBScanTableExt;
 import bean.annotation.UniqueConstraint;
 import conf.DbCfg;
 import org.slf4j.Logger;
@@ -221,13 +221,13 @@ public class DBScanner {
                     entityPackage = entityPackage.trim();
                     {// entity
 
-                        List<Class<?>> classSet = ClassUtil.scanClassesFilter(entityPackage, Entity.class);
+                        List<Class<?>> classSet = ClassUtil.scanClassesFilter(entityPackage, DBScanEntity.class);
                         Iterator<Class<?>> ite = classSet.iterator();
 
                         while (ite.hasNext()) {
                             Class<?> objClass = ite.next();
                             // 过滤没有 @TableName 注解的类
-                            if (!objClass.isAnnotationPresent(Table.class)) {
+                            if (!objClass.isAnnotationPresent(DBScanTable.class)) {
                                 ite.remove();
                             }
                         }
@@ -306,7 +306,7 @@ public class DBScanner {
                 // 遍历所有table
                 try {
                     // 过滤没有 @Table 注解的类
-                    if (!objectClass.isAnnotationPresent(Table.class)) {
+                    if (!objectClass.isAnnotationPresent(DBScanTable.class)) {
                         continue;
                     }
 
@@ -314,24 +314,24 @@ public class DBScanner {
                     String oldMd5 = oldFileMd5Map.get(className); // 当前class 上一次检测的md5
 
                     // table
-                    Table genrateTable = objectClass.getAnnotation(Table.class);
-                    String tableName = genrateTable.name();
-                    UniqueConstraint[] uniqueConstraints = genrateTable.uniqueConstraints();
+                    DBScanTable genrateDBScanTable = objectClass.getAnnotation(DBScanTable.class);
+                    String tableName = genrateDBScanTable.name();
+                    UniqueConstraint[] uniqueConstraints = genrateDBScanTable.uniqueConstraints();
 
                     // TODO 批量约束 兼容老代码
                     List<DBTableAndFields> oneBatchConstraints = tableBatchMap.get(tableName);
-                    TableExt generateTableExt = objectClass.getAnnotation(TableExt.class);
-                    if (generateTableExt == null && oneBatchConstraints != null && oneBatchConstraints.size() > 0) {
+                    DBScanTableExt generateDBScanTableExt = objectClass.getAnnotation(DBScanTableExt.class);
+                    if (generateDBScanTableExt == null && oneBatchConstraints != null && oneBatchConstraints.size() > 0) {
                         // 如果entity没有约束 使用批量约束
                         for (DBTableAndFields oneBatchConstraint : oneBatchConstraints) {
                             if (oneBatchConstraint == null || oneBatchConstraint.justColumns()) {
                                 continue;
                             }
-                            generateTableExt = oneBatchConstraint.table();
+                            generateDBScanTableExt = oneBatchConstraint.table();
                             break;
                         }
                     }
-                    String tableCollation = generateTableExt != null ? generateTableExt.collate() : null;
+                    String tableCollation = generateDBScanTableExt != null ? generateDBScanTableExt.collate() : null;
 
                     // 生产entity对于的table
                     DBScannerInfoTable tableFromEntity = new DBScannerInfoTable();
@@ -408,8 +408,8 @@ public class DBScanner {
                         }
                     }
                     //联合索引
-                    if(generateTableExt != null && generateTableExt.keyConstraints()!=null){
-                        for (KeyConstraint uc : generateTableExt.keyConstraints()) {
+                    if(generateDBScanTableExt != null && generateDBScanTableExt.keyConstraints()!=null){
+                        for (KeyConstraint uc : generateDBScanTableExt.keyConstraints()) {
                             if(uc == null){
                                 continue;
                             }
@@ -702,11 +702,11 @@ public class DBScanner {
      */
     public static List<TreeMap<DBColFieldKey, Object>> getFieldList(Class<?> clazz, List<DBTableAndFields> dbTableAndFieldsArray) throws NoSuchFieldException {
 
-        Map<String,List<ColumnExt>> columnBatchMap = new HashMap<>();
+        Map<String,List<DBScanColumnExt>> columnBatchMap = new HashMap<>();
         if(dbTableAndFieldsArray!=null){
             for (DBTableAndFields tableAndFields : dbTableAndFieldsArray) {
                 if(tableAndFields != null && tableAndFields.columns()!=null){
-                    for (ColumnExt column : tableAndFields.columns()) {
+                    for (DBScanColumnExt column : tableAndFields.columns()) {
                         if(StringUtil.isEmptyString(column.name())){
                             continue;
                         }
@@ -739,23 +739,23 @@ public class DBScanner {
                 continue;
             }
 
-            Column columnInfo = field.getAnnotation(Column.class);
-            String columnName = columnInfo == null ? field.getName() : columnInfo.name();
+            DBScanColumn DBScanColumnInfo = field.getAnnotation(DBScanColumn.class);
+            String columnName = DBScanColumnInfo == null ? field.getName() : DBScanColumnInfo.name();
             //定义表结构
-            ColumnExt column = field.getAnnotation(ColumnExt.class);
+            DBScanColumnExt column = field.getAnnotation(DBScanColumnExt.class);
             if(column != null){
                 //加载最前面 优先
                 columnBatchMap.computeIfAbsent(columnName,k->new ArrayList<>()).add(0,column);
             }
 
-            Id idInfo = field.getAnnotation(Id.class);
+            DBScanId DBScanIdInfo = field.getAnnotation(DBScanId.class);
             GeneratedValue generatedValue = field.getAnnotation(GeneratedValue.class);
-            List<ColumnExt> columnExtList = columnBatchMap.get(columnName);
+            List<DBScanColumnExt> DBScanColumnExtList = columnBatchMap.get(columnName);
 
             TreeMap<DBColFieldKey, Object> fieldMap = new TreeMap<>();
             //列类型
             //首个非null
-            FieldType type = selectColumnValueFirst(columnExtList,
+            FieldType type = selectColumnValueFirst(DBScanColumnExtList,
                     columnStruct -> columnStruct == null || columnStruct.type() == FieldType.NULL ? FieldType.valueOfType(field.getType()) : columnStruct.type()
             );
             fieldMap.put(FIELD_TYPE, type);
@@ -763,32 +763,32 @@ public class DBScanner {
             fieldMap.put(COLUMN_NAME, columnName);
 
             //以下均为 首个非null
-            fieldMap.put(COLUMN_SIZE, selectColumnValueFirst(columnExtList,
+            fieldMap.put(COLUMN_SIZE, selectColumnValueFirst(DBScanColumnExtList,
                     columnStruct -> columnStruct != null && columnStruct.size() > 0 ? columnStruct.size() : type.getLen())
             );
-            fieldMap.put(COLUMN_DEF, selectColumnValueFirst(columnExtList,
+            fieldMap.put(COLUMN_DEF, selectColumnValueFirst(DBScanColumnExtList,
                     columnStruct -> columnStruct == null ? null : columnStruct.defaults())
             );
-            fieldMap.put(HAS_DEF_VAL, selectColumnValueFirst(columnExtList,
+            fieldMap.put(HAS_DEF_VAL, selectColumnValueFirst(DBScanColumnExtList,
                     columnStruct -> columnStruct == null ? true : columnStruct.hasDefaults())
             );
 
-            fieldMap.put(REMARKS, selectColumnValueFirst(columnExtList,
+            fieldMap.put(REMARKS, selectColumnValueFirst(DBScanColumnExtList,
                     columnStruct -> columnStruct == null ? "" : columnStruct.comment())
             );
-            fieldMap.put(COLLATION, selectColumnValueFirst(columnExtList,
+            fieldMap.put(COLLATION, selectColumnValueFirst(DBScanColumnExtList,
                     columnStruct -> columnStruct == null ? null : columnStruct.collate())
             );
-            fieldMap.put(EXTRA, selectColumnValueFirst(columnExtList,
+            fieldMap.put(EXTRA, selectColumnValueFirst(DBScanColumnExtList,
                     columnStruct -> columnStruct == null ? null : columnStruct.extra())
             );
             //首个非默认值
-            fieldMap.put(MODIFY_MODE, selectColumnValue(columnExtList,
+            fieldMap.put(MODIFY_MODE, selectColumnValue(DBScanColumnExtList,
                     columnStruct -> columnStruct != null && columnStruct.modifyMode() != FieldModifyMode.STRICT,
                     columnStruct -> columnStruct == null ? null : columnStruct.modifyMode())
             );
 
-            fieldMap.put(IS_NULLABLE, columnInfo == null ? true : columnInfo.nullable()); //是否可以null
+            fieldMap.put(IS_NULLABLE, DBScanColumnInfo == null ? true : DBScanColumnInfo.nullable()); //是否可以null
             //是否自增
             fieldMap.put(IS_AUTOINCREMENT, (generatedValue != null && "AUTO_INCREMENT".equalsIgnoreCase(generatedValue.generator()))
                     || (fieldMap.get(EXTRA) != null && (fieldMap.get(EXTRA).toString().contains("AUTO_INCREMENT")))
@@ -796,11 +796,11 @@ public class DBScanner {
 
             //索引
             IndexType indexType = IndexType.NONE;
-            if(idInfo != null){
+            if(DBScanIdInfo != null){
                 indexType = IndexType.PK;
-            }else if(columnInfo != null && columnInfo.unique()){
+            }else if(DBScanColumnInfo != null && DBScanColumnInfo.unique()){
                 indexType = IndexType.UNIQUE;
-            }else if(selectColumnValueFirst(columnExtList,columnStruct -> columnStruct == null ? false : columnStruct.index())){
+            }else if(selectColumnValueFirst(DBScanColumnExtList, columnStruct -> columnStruct == null ? false : columnStruct.index())){
                 //取第一个不为空的
                 indexType = IndexType.KEY;
             }
@@ -819,18 +819,18 @@ public class DBScanner {
      * @param <T>
      * @return
      */
-    private static <T> T selectColumnValue(List<ColumnExt> columnList, Predicate<ColumnExt> predicate, Function<ColumnExt, T> function) {
+    private static <T> T selectColumnValue(List<DBScanColumnExt> columnList, Predicate<DBScanColumnExt> predicate, Function<DBScanColumnExt, T> function) {
         if (columnList != null) {
-            for (ColumnExt columnExt : columnList) {
-                if (predicate.test(columnExt)) {
-                    return function.apply(columnExt);
+            for (DBScanColumnExt DBScanColumnExt : columnList) {
+                if (predicate.test(DBScanColumnExt)) {
+                    return function.apply(DBScanColumnExt);
                 }
             }
         }
         return function.apply(null);
     }
 
-    private static <T> T selectColumnValueFirst(List<ColumnExt> columnList, Function<ColumnExt, T> function) {
+    private static <T> T selectColumnValueFirst(List<DBScanColumnExt> columnList, Function<DBScanColumnExt, T> function) {
         return selectColumnValue(columnList, c -> c != null, function);
     }
 

@@ -12,7 +12,7 @@ import static bean.FieldModifyMode.STRICT;
  * @author guolinyun
  * @date 2024/2/1
  */
-public @interface ColumnExt {
+public @interface DBScanColumnExt {
     /*************** 核心字段 *****************/
     /**
      * 默认不同填 只有在批量扫库注解中使用

@@ -1,29 +1,29 @@
 package entity4test;
 
-import bean.annotation.Column;
-import bean.annotation.Entity;
+import bean.annotation.DBScanColumn;
+import bean.annotation.DBScanEntity;
 import bean.annotation.GeneratedValue;
-import bean.annotation.Id;
-import bean.annotation.Table;
+import bean.annotation.DBScanId;
+import bean.annotation.DBScanTable;
 
 /**
  * 测试用 后续这个文件夹需要删除
  */
-@Entity
-@Table(name = "children")
+@DBScanEntity
+@DBScanTable(name = "children")
 public class Children {
-    @Id
+    @DBScanId
     @GeneratedValue(generator = "AUTO_INCREMENT")
-    @Column(name = "id", unique = true)
+    @DBScanColumn(name = "id", unique = true)
     private int id;
 
-    @Column(name = "egg")
+    @DBScanColumn(name = "egg")
     private int egg;
 
-    @Column(name = "pigs")
+    @DBScanColumn(name = "pigs")
     private int pigs;
 
-    @Column(name = "oaa")
+    @DBScanColumn(name = "oaa")
     private int oaa;
 
 

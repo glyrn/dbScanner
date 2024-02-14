@@ -1,21 +1,18 @@
 package bean.annotation;
 
-import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 标记实体类注解
+ * 主键id 标识
  *
  * @author guolinyun
- * @date 2024/2/5
+ * @date 2024/2/2
  */
-@Documented
-@Target({ElementType.TYPE})
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Entity {
-    String name() default "";
-}
 
+@Target({ElementType.METHOD, ElementType.FIELD})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface DBScanId {
+}

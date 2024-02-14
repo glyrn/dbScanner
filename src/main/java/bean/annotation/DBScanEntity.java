@@ -1,23 +1,21 @@
 package bean.annotation;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 表注解 后续兼容其他orm的相关注解
+ * 标记实体类注解
  *
- * 1. 单独标注表名
+ * @author guolinyun
+ * @date 2024/2/5
  */
+@Documented
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Table {
+public @interface DBScanEntity {
     String name() default "";
-
-    String catalog() default "";
-
-    String schema() default "";
-
-    UniqueConstraint[] uniqueConstraints() default {};
 }
+

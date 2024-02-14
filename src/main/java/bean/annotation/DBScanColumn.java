@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
-public @interface Column {
+public @interface DBScanColumn {
     String name() default "";
 
     boolean unique() default false;
