@@ -65,26 +65,60 @@
                 </configuration>
             </plugin>
 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>agent.DBScannerAgent</mainClass> <!-- 添加代理类的全限定名 -->
+                        </manifest>
+                        <manifestEntries>
+                            <Premain-Class>agent.DBScannerAgent</Premain-Class>
+                            <Can-Redefine-Classes>true</Can-Redefine-Classes>
+                            <Can-Retransform-Classes>true</Can-Retransform-Classes>
+                            <Can-Set-Native-Method-Prefix>true</Can-Set-Native-Method-Prefix>
+                        </manifestEntries>
+                    </archive>
+                    <classifier>jar-with-dependencies</classifier>
+                </configuration>
+            </plugin>
 
 
-            <!-- 打包包含依赖的jar -->
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>agent.DBScannerAgent</mainClass> <!-- 添加代理类的全限定名 -->
+                        </manifest>
+                        <manifestEntries>
+                            <Premain-Class>agent.DBScannerAgent</Premain-Class>
+                            <Can-Redefine-Classes>true</Can-Redefine-Classes>
+                            <Can-Retransform-Classes>true</Can-Retransform-Classes>
+                            <Can-Set-Native-Method-Prefix>true</Can-Set-Native-Method-Prefix>
+                        </manifestEntries>
+                    </archive>
                 </configuration>
                 <executions>
                     <execution>
-                        <id>make-assembly</id> <!-- 绑定生命周期阶段 -->
-                        <phase>package</phase> <!-- 绑定到package阶段 -->
+                        <id>make-assembly</id>
+                        <phase>package</phase>
                         <goals>
-                            <goal>single</goal> <!-- 执行的Goal -->
+                            <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
+
+
+
         </plugins>
     </build>
 

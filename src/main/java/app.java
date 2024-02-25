@@ -1,3 +1,4 @@
+import com.sun.org.apache.xpath.internal.operations.String;
 import conf.DbCfg;
 import org.yaml.snakeyaml.Yaml;
 import source.DBExcutor;
@@ -24,7 +25,10 @@ public class app {
 //
 //        logger.info("scanning table {}", "table_1");
 
-        DBScanner.getInstance().startWork();
+
+
+
+
 
     }
 
