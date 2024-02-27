@@ -3,6 +3,11 @@ package bean.annotation;
 import bean.FieldModifyMode;
 import bean.FieldType;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 import static bean.FieldModifyMode.STRICT;
 
 /**
@@ -12,6 +17,8 @@ import static bean.FieldModifyMode.STRICT;
  * @author guolinyun
  * @date 2024/2/1
  */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD})
 public @interface DBScanColumnExt {
     /*************** 核心字段 *****************/
     /**
@@ -35,4 +42,9 @@ public @interface DBScanColumnExt {
     /*************** 辅助字段 *****************/
     boolean index() default false;			        // 表示索引
     FieldModifyMode modifyMode() default STRICT;  // 修改字段的对比模式 用在modify column
+
+    /**************** 整合字段 ****************/
+    boolean nullable() default true; // 表示非空
+
+    boolean unique() default false; // 表示唯一
 }

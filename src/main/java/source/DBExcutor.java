@@ -188,7 +188,7 @@ public class DBExcutor implements Closeable {
                 conn.excuteSqlRecords.add(sql);
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
     }
 

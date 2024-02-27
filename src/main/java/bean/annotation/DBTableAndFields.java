@@ -6,8 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 扫表专用
- * 完整的包含table和所有字段的延伸描述 [ 兼容层 ]
+ * 扫表 [ 兼容老代码的注解 ]
+ * 完整的包含table和所有字段的延伸描述
+ *
+ *
  *
  * @author guolinyun
  */

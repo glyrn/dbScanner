@@ -8,7 +8,6 @@ import bean.DBScannerEntityMD5;
 import bean.DBScannerInfoIndex;
 import bean.DBScannerInfoTable;
 import bean.annotation.DBTableAndFields;
-import bean.annotation.DBScanEntity;
 import bean.FieldModifyMode;
 import bean.FieldType;
 import bean.annotation.GeneratedValue;
@@ -221,16 +220,17 @@ public class DBScanner {
                     entityPackage = entityPackage.trim();
                     {// entity
 
-                        List<Class<?>> classSet = ClassUtil.scanClassesFilter(entityPackage, DBScanEntity.class);
-                        Iterator<Class<?>> ite = classSet.iterator();
+                        List<Class<?>> classSet = ClassUtil.scanClassesFilter(entityPackage, DBScanTable.class);
+//                        Iterator<Class<?>> ite = classSet.iterator();
 
-                        while (ite.hasNext()) {
-                            Class<?> objClass = ite.next();
-                            // 过滤没有 @TableName 注解的类
-                            if (!objClass.isAnnotationPresent(DBScanTable.class)) {
-                                ite.remove();
-                            }
-                        }
+//                        while (ite.hasNext()) {
+//                            Class<?> objClass = ite.next();
+//                            // 过滤没有 @TableName 注解的类
+//                            if (!objClass.isAnnotationPresent(DBScanTable.class)) {
+//                                ite.remove();
+//                            }
+//                        }
+
                         if (classSet.size() > 0) {
                             packageNames.add(entityPackage);
                             entities.put(entityPackage, classSet);
@@ -363,7 +363,7 @@ public class DBScanner {
 
                         String columnName = column.get(COLUMN_NAME);
 
-                        String test = column.toString();
+//                        String test = column.toString();
 
                         // 记录这个列
                         tableFromEntity.getColumns().add(column);
@@ -615,7 +615,7 @@ public class DBScanner {
                     updateMd5Table(dbExcutor, insertMd5Sql);
 
                 }catch (Exception ex) {
-                    throw new RuntimeException();
+                    ex.printStackTrace();
                 }
             }
 
@@ -739,10 +739,10 @@ public class DBScanner {
                 continue;
             }
 
-            DBScanColumn DBScanColumnInfo = field.getAnnotation(DBScanColumn.class);
-            String columnName = DBScanColumnInfo == null ? field.getName() : DBScanColumnInfo.name();
+
             //定义表结构
             DBScanColumnExt column = field.getAnnotation(DBScanColumnExt.class);
+            String columnName = column == null ? field.getName() : column.name();
             if(column != null){
                 //加载最前面 优先
                 columnBatchMap.computeIfAbsent(columnName,k->new ArrayList<>()).add(0,column);
@@ -788,7 +788,7 @@ public class DBScanner {
                     columnStruct -> columnStruct == null ? null : columnStruct.modifyMode())
             );
 
-            fieldMap.put(IS_NULLABLE, DBScanColumnInfo == null ? true : DBScanColumnInfo.nullable()); //是否可以null
+            fieldMap.put(IS_NULLABLE, column == null ? true : column.nullable()); //是否可以null
             //是否自增
             fieldMap.put(IS_AUTOINCREMENT, (generatedValue != null && "AUTO_INCREMENT".equalsIgnoreCase(generatedValue.generator()))
                     || (fieldMap.get(EXTRA) != null && (fieldMap.get(EXTRA).toString().contains("AUTO_INCREMENT")))
@@ -798,7 +798,7 @@ public class DBScanner {
             IndexType indexType = IndexType.NONE;
             if(DBScanIdInfo != null){
                 indexType = IndexType.PK;
-            }else if(DBScanColumnInfo != null && DBScanColumnInfo.unique()){
+            }else if(column != null && column.unique()){
                 indexType = IndexType.UNIQUE;
             }else if(selectColumnValueFirst(DBScanColumnExtList, columnStruct -> columnStruct == null ? false : columnStruct.index())){
                 //取第一个不为空的
