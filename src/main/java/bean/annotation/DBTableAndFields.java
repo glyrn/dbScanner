@@ -21,7 +21,7 @@ public @interface DBTableAndFields {
      *
      * @return
      */
-    DBScanTableExt table();
+    DBScanTable table();
 
     /**
      * 只有列生效
@@ -31,9 +31,9 @@ public @interface DBTableAndFields {
     boolean justColumns() default false;
 
     /**
-     * 表中字段约束信息
+     * 表中字段约束信息 -- 存储旧的类 用来兼容老代码
      *
      * @return
      */
-    DBScanColumnExt[] columns();
+    DBScanColumn[] columns();
 }

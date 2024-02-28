@@ -1,23 +1,29 @@
 package bean.annotation;
 
+import bean.FieldType;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 表注解 后续兼容其他orm的相关注解
- *
- * 1. 单独标注表名
+ * table entity 的拓展注解
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DBScanTable {
+    /**
+     * 表名字
+     */
     String name() default "";
+    /**
+     * 字段排序算法
+     */
+    String collate() default FieldType.DEFAULT_CHARSET_COLLATE;
 
-    String catalog() default "";
-
-    String schema() default "";
-
-    UniqueConstraint[] uniqueConstraints() default {};
+    /**
+     * 普通索引
+     */
+    KeyConstraint[] keyConstraints() default {};
 }
