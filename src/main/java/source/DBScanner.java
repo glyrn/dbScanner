@@ -195,12 +195,13 @@ public class DBScanner {
 
     /**
      * 扫描数据库
-     * @param dbExcutor
-     * @param tablePackages
+     * @param dbExcutor sql执行器
+     * @param tablePackages 要扫描的包
      * @return
      */
     private boolean scanningDatabase(DBExcutor dbExcutor, String tablePackages) {
         try{
+            // 获取数据库所有表名
             List<String> tableNames = dbExcutor.getAllTablesName();
 
             Set<String> packageNames = new LinkedHashSet<>();
@@ -212,13 +213,15 @@ public class DBScanner {
             Map<String, List<Class<?>>> entities = new HashMap<>();
             Map<String, List<Class<?>>> batchConstrains = new HashMap<>();
 
+            // 分割出包名
             String[] entityPackageArray = tablePackages.split(",");
 
-            if (entityPackageArray != null) {
+            if (entityPackageArray != null && entityPackageArray.length != 0) {
                 for (String entityPackage : entityPackageArray) {
                     entityPackage = entityPackage.trim();
                     {// entity
 
+                        // 过滤掉这个包下没有annotation的类
                         List<Class<?>> classSet = ClassUtil.scanClassesFilter(entityPackage, DBScanTable.class);
 //                        Iterator<Class<?>> ite = classSet.iterator();
 
@@ -230,8 +233,10 @@ public class DBScanner {
 //                            }
 //                        }
 
+                        // 包下没有带注解的类就直接不处理这个包
                         if (classSet.size() > 0) {
                             packageNames.add(entityPackage);
+                            // 建立包和包下带注解类集合的映射
                             entities.put(entityPackage, classSet);
                         }
                     }
@@ -245,7 +250,7 @@ public class DBScanner {
             // 旧的md5
             if (oldFileMd5Map.size() <= 0) {
 
-                List<Map<String, Object>> list = dbExcutor.qurey("select packageName,className,md5,tableName from " + TABLE_MD5);
+                List<Map<String, Object>> list = dbExcutor.query("select packageName,className,md5,tableName from " + TABLE_MD5);
                 if (list != null && list.size() > 0) {
                     for (Map<String, Object> objectMap : list) {
                         DBScannerEntityMD5 entityMD5 = new DBScannerEntityMD5();
@@ -660,16 +665,17 @@ public class DBScanner {
      */
     private void createTableMd5(DBExcutor dbExcutor, List<String> tableNames) {
         try{
-            Set<String> tableNameSet = new HashSet<>(tableNames);
 
             // 如果是第一次使用 创建md5专用表 用于记录各表class的md5值
-
-            if (!tableNameSet.contains(TABLE_MD5)) {
-
-                String sql = "CREATE TABLE IF NOT EXISTS " + TABLE_MD5 + "(className varchar(120) not null primary key,packageName varchar(512),md5 varchar(100),tableName varchar(100) not null);";
-                log.debug(sql);
-                dbExcutor.update(sql , false);
+            for (String tableName : tableNames) {
+                if (tableName.equals(TABLE_MD5)) {
+                    return;
+                }
             }
+
+            String sql = "CREATE TABLE IF NOT EXISTS " + TABLE_MD5 + "(className varchar(120) not null primary key,packageName varchar(512),md5 varchar(100),tableName varchar(100) not null);";
+            log.debug(sql);
+            dbExcutor.update(sql , false);
 
         }catch (Exception ex) {
             throw new RuntimeException(ex);
