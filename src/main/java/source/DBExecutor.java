@@ -2,7 +2,6 @@ package source;
 
 import conf.DbCfg;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,9 +18,9 @@ import java.util.Map;
 
  */
 
-public class DBExcutor implements Closeable {
+public class DBExecutor implements Closeable {
 
-    Logger log = LoggerFactory.getLogger(DBExcutor.class);
+    Logger log = LoggerFactory.getLogger(DBExecutor.class);
 
     static class Conn {
         @Getter

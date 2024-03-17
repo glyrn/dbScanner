@@ -158,9 +158,9 @@ public class DBScanner {
 
 
 
-        try(DBExcutor dbExcutor = new DBExcutor()){
+        try(DBExecutor dbExecutor = new DBExecutor()){
             // 建立数据库连接失败
-            if (!dbExcutor.init(dbCfg)) {
+            if (!dbExecutor.init(dbCfg)) {
                 return false;
             }
             // 扫表
@@ -179,10 +179,10 @@ public class DBScanner {
 
             long startTime = System.currentTimeMillis();
 
-            boolean result = scanningDatabase(dbExcutor, dbCfg.getEntityPackage());
+            boolean result = scanningDatabase(dbExecutor, dbCfg.getEntityPackage());
 
             //记录sql文件
-            recordUpdateSql(startTime,dbExcutor.getUpdateSqRecords());
+            recordUpdateSql(startTime, dbExecutor.getUpdateSqRecords());
 
 
             return result;
@@ -195,19 +195,19 @@ public class DBScanner {
 
     /**
      * 扫描数据库
-     * @param dbExcutor sql执行器
+     * @param dbExecutor sql执行器
      * @param tablePackages 要扫描的包
      * @return
      */
-    private boolean scanningDatabase(DBExcutor dbExcutor, String tablePackages) {
+    private boolean scanningDatabase(DBExecutor dbExecutor, String tablePackages) {
         try{
             // 获取数据库所有表名
-            List<String> tableNames = dbExcutor.getAllTablesName();
+            List<String> tableNames = dbExecutor.getAllTablesName();
 
             Set<String> packageNames = new LinkedHashSet<>();
 
             // 创建md5表
-            createTableMd5(dbExcutor, tableNames);
+            createTableMd5(dbExecutor, tableNames);
 
             // 遍历所有需要自动扫库的entity
             Map<String, List<Class<?>>> entities = new HashMap<>();
@@ -250,7 +250,7 @@ public class DBScanner {
             // 旧的md5
             if (oldFileMd5Map.size() <= 0) {
 
-                List<Map<String, Object>> list = dbExcutor.query("select packageName,className,md5,tableName from " + TABLE_MD5);
+                List<Map<String, Object>> list = dbExecutor.query("select packageName,className,md5,tableName from " + TABLE_MD5);
                 if (list != null && list.size() > 0) {
                     for (Map<String, Object> objectMap : list) {
                         DBScannerEntityMD5 entityMD5 = new DBScannerEntityMD5();
@@ -273,7 +273,7 @@ public class DBScanner {
 
             }
             // 开始扫描
-            if (!doScanningDatabase(dbExcutor, entities, batchConstrains, tableNames)) {
+            if (!doScanningDatabase(dbExecutor, entities, batchConstrains, tableNames)) {
                 return false;
             }
 
@@ -285,13 +285,13 @@ public class DBScanner {
 
     /**
      *
-     * @param dbExcutor
+     * @param dbExecutor
      * @param entities 实体类
      * @param batchConstraints 批量约束
      * @param existTableNames 库中已经存在的表
      * @return
      */
-    private boolean doScanningDatabase(DBExcutor dbExcutor, Map<String, List<Class<?>>> entities, Map<String, List<Class<?>>> batchConstraints, List<String> existTableNames) {
+    private boolean doScanningDatabase(DBExecutor dbExecutor, Map<String, List<Class<?>>> entities, Map<String, List<Class<?>>> batchConstraints, List<String> existTableNames) {
 
         log.debug("doScanningDatabase entities = {},existTableNames={}", entities, existTableNames);
 
@@ -433,7 +433,7 @@ public class DBScanner {
 
                         log.debug("scanning table: {}", tableName);
                         // 基础信息
-                        queryTableBaseInfo(dbExcutor, tableName, key2CreateStrMap);
+                        queryTableBaseInfo(dbExecutor, tableName, key2CreateStrMap);
 
                         for (Map.Entry<String, String> stringEntry : key2CreateStrMap.entrySet()) {
                             if(stringEntry.getValue().endsWith(",")){
@@ -450,10 +450,10 @@ public class DBScanner {
                     // 表不存在,建新表
                     if (key2CreateStrMap.size() <= 0) {
                         //创建table
-                        dbExcutor.update(tableFromEntity.dropTable(),true);
-                        dbExcutor.update(tableFromEntity.createTable(),true);
+                        dbExecutor.update(tableFromEntity.dropTable(),true);
+                        dbExecutor.update(tableFromEntity.createTable(),true);
                         //扫表完成 记录table md5
-                        updateMd5Table(dbExcutor, insertMd5Sql);
+                        updateMd5Table(dbExecutor, insertMd5Sql);
                         continue;
                     }
 
@@ -474,7 +474,7 @@ public class DBScanner {
                         }
                         if(!collationNew.equals(collationOld)){
                             //字符排序改变
-                            dbExcutor.update(tableFromEntity.alterCollate(),true);
+                            dbExecutor.update(tableFromEntity.alterCollate(),true);
                         }
                     }
 
@@ -485,7 +485,7 @@ public class DBScanner {
                         String columnName = addColumn.getName();
                         // add column
                         if (getKeyIgnoreCase(key2CreateStrMap.keySet(),columnName) == null) {
-                            dbExcutor.update(tableFromEntity.addColumn(addColumn),true);
+                            dbExecutor.update(tableFromEntity.addColumn(addColumn),true);
                             continue;
                         }
                     }
@@ -520,7 +520,7 @@ public class DBScanner {
                             DBScannerInfoIndex infoIndex = indexMapFromEntity.get(indexName);
                             if (infoIndex == null || !infoIndex.equalsWithOld(line)) {
                                 //索引不存在了 或者 与原索引不一致
-                                dbExcutor.update(tableFromEntity.dropIndex(indexName), true);
+                                dbExecutor.update(tableFromEntity.dropIndex(indexName), true);
                                 //标记该索引已经删除
                                 oldAliveIndex.remove(indexName);
                                 continue;
@@ -553,7 +553,7 @@ public class DBScanner {
                                                 //标记该索引已经删除
                                                 oldAliveIndex.remove(indexName);
                                                 //删除列之前 先删除索引
-                                                dbExcutor.update(tableFromEntity.dropIndex(indexName), true);
+                                                dbExecutor.update(tableFromEntity.dropIndex(indexName), true);
                                             } catch (Exception sqlException) {
                                                 // todo 这里是sql 异常 记录sql
                                                 log.error("err sql: {}", sqlException);
@@ -562,7 +562,7 @@ public class DBScanner {
                                     }
                                 }
                                 //删除列
-                                dbExcutor.update(tableFromEntity.dropColumn(key),true);
+                                dbExecutor.update(tableFromEntity.dropColumn(key),true);
                                 continue;
                             }
                         }
@@ -576,7 +576,7 @@ public class DBScanner {
                             // 判断索引不存在
                             if(!oldAliveIndex.contains(index.getIndexName())){
 //                                if (!key2CreateStrMap.containsKey(index.toKeyString())) {//这种方法 索引名称不变的情况无法判断
-                                dbExcutor.update(tableFromEntity.addIndex(index), true);
+                                dbExecutor.update(tableFromEntity.addIndex(index), true);
                                 continue;
                             }
                         }
@@ -594,7 +594,7 @@ public class DBScanner {
                             String keyIgnoreCase = getKeyIgnoreCase(key2CreateStrMap.keySet(), columnName);
                             if (keyIgnoreCase != null) {
                                 if (!column.checkModifyStr(flagModifyStrict,key2CreateStrMap.get(keyIgnoreCase),key2CreateStrMap.get("COLLATION"))) {
-                                    dbExcutor.update(tableFromEntity.alterColumn(column),true);
+                                    dbExecutor.update(tableFromEntity.alterColumn(column),true);
                                     continue;
                                 }
                             }
@@ -604,7 +604,7 @@ public class DBScanner {
                     }// end while
 
                     //扫表完成 记录table md5
-                    updateMd5Table(dbExcutor, insertMd5Sql);
+                    updateMd5Table(dbExecutor, insertMd5Sql);
 
                 }catch (Exception ex) {
                     ex.printStackTrace();
@@ -627,13 +627,13 @@ public class DBScanner {
 
                 String sql = "DROP TABLE IF EXISTS `" + tableName + "`;";
                 try {
-                    dbExcutor.update(sql,true);
+                    dbExecutor.update(sql,true);
                 } catch (Exception e) {
                     throw new RuntimeException();
                 }
                 String delMd5 = "DELETE FROM `" + TABLE_MD5 + "` WHERE tableName = \"" + tableName + "\";";
                 try {
-                    dbExcutor.update(delMd5,false);
+                    dbExecutor.update(delMd5,false);
                 } catch (Exception e) {
                     throw new RuntimeException();
                 }
@@ -663,7 +663,7 @@ public class DBScanner {
     /**
      * 创建classMd5表
      */
-    private void createTableMd5(DBExcutor dbExcutor, List<String> tableNames) {
+    private void createTableMd5(DBExecutor dbExecutor, List<String> tableNames) {
         try{
 
             // 如果是第一次使用 创建md5专用表 用于记录各表class的md5值
@@ -675,7 +675,7 @@ public class DBScanner {
 
             String sql = "CREATE TABLE IF NOT EXISTS " + TABLE_MD5 + "(className varchar(120) not null primary key,packageName varchar(512),md5 varchar(100),tableName varchar(100) not null);";
             log.debug(sql);
-            dbExcutor.update(sql , false);
+            dbExecutor.update(sql , false);
 
         }catch (Exception ex) {
             throw new RuntimeException(ex);
@@ -832,7 +832,7 @@ public class DBScanner {
      *
      * @param dbSource
      */
-    private void queryTableBaseInfo(DBExcutor dbSource, String tableName,Map<String, String> key2CreateStrMap) {
+    private void queryTableBaseInfo(DBExecutor dbSource, String tableName, Map<String, String> key2CreateStrMap) {
 
         List<Map<String, Object>> result = dbSource.query("show create table " + tableName);
         try {
@@ -925,7 +925,7 @@ public class DBScanner {
     }
 
 
-    private void updateMd5Table(DBExcutor dbSource, String sql) {
+    private void updateMd5Table(DBExecutor dbSource, String sql) {
         try {
             dbSource.update(sql,false);
         } catch (Exception e) {
