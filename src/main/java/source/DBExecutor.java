@@ -2,7 +2,6 @@ package source;
 
 import conf.DbCfg;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,9 +18,9 @@ import java.util.Map;
 
  */
 
-public class DBExcutor implements Closeable {
+public class DBExecutor implements Closeable {
 
-    Logger log = LoggerFactory.getLogger(DBExcutor.class);
+    Logger log = LoggerFactory.getLogger(DBExecutor.class);
 
     static class Conn {
         @Getter
@@ -85,6 +84,7 @@ public class DBExcutor implements Closeable {
                 conn.connection = null;
             }
 
+            // 没设置编码类型就设置编码类型
             if (dbUrl.indexOf("characterEncoding") < 0) {
                 if (dbUrl.indexOf("?") < 0) {
                     dbUrl = dbUrl + "?characterEncoding=utf8";
@@ -134,11 +134,12 @@ public class DBExcutor implements Closeable {
 //    }
 
     /**
-     * 查询sql
-     * @param sql
-     * @return
+     * 执行DQL语句
+     * @param sql 要执行的DQL语句
+     * @return 查询结果的封装，每个元素是一行结果，每一行都以Map形式存储，key是列名，value是该行该列的数据
      */
     public List<Map<String, Object>> query(String sql){
+        // 存这次查询的所有结果，每一行的数据用一个Map存储，key是column名，value是column的值
         List<Map<String, Object>> rows = new ArrayList<>();
 
         try (
@@ -149,20 +150,22 @@ public class DBExcutor implements Closeable {
             ResultSetMetaData meta = rs.getMetaData();
 
             List<String> colList = new ArrayList<>();
-
+            // 获取列名集合
             for (int i = 1; i <= meta.getColumnCount(); i++) {
                 String name = meta.getColumnName(i);
                 colList.add(name);
             }
 
+            // 遍历查询结果
             while (rs.next()){
                 Map<String, Object> columnMap = new LinkedHashMap<>();
-
+                // 存储这行每列的结果
                 for (String colName : colList) {
                     Object object = rs.getObject(colName);
                     columnMap.put(colName,object);
                 }
 
+                // 把这行结果放到总结果内
                 rows.add(columnMap);
             }
 
@@ -193,43 +196,6 @@ public class DBExcutor implements Closeable {
     }
 
     /**
-     * 查询sql封装
-     */
-    public List<Map<String, Object>> qurey(String sql) {
-        List<Map<String, Object>> rows = new ArrayList<>();
-
-        try (
-                Statement statement = conn.connection.createStatement();
-                ResultSet rs = statement.executeQuery(sql);
-        ){
-            // 收集元数据
-            ResultSetMetaData meta = rs.getMetaData();
-            List<String> colList = new ArrayList<>();
-            // 记录列的名字
-            for (int i = 1; i < meta.getColumnCount(); i ++) {
-                String columnName = meta.getColumnName(i);
-                colList.add(columnName);
-            }
-
-            while (rs.next()) {
-                Map<String, Object> columeMap = new LinkedHashMap<>();
-
-                for (String colName : colList) {
-                    Object object = rs.getObject(colName);
-                    columeMap.put(colName, object);
-                }
-                rows.add(columeMap);
-            }
-
-
-        }catch (Exception ex) {
-            // TODO 记录日志
-            return null;
-        }
-        return rows;
-    }
-
-    /**
      * 获取执行的sql记录
      * @return
      */
@@ -245,6 +211,7 @@ public class DBExcutor implements Closeable {
     public List<String> getAllTablesName() {
         List<String> tableNames = new ArrayList<>();
         try {
+            // 利用Connection来获取数据库的元数据
             DatabaseMetaData metaData = conn.connection.getMetaData();
             ResultSet resultSet = metaData.getTables(conn.connection.getCatalog(), "%", "%", new String[]{"TABLE"});
 
